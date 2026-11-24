@@ -27,6 +27,22 @@ It writes the line to `$MAKEFUN_OUTPUT_DIR/entry.txt` (default
 `/output/entry.txt`). Pure Python standard library, no network, no
 randomness: the same text on every run.
 
+## How it works
+
+`main.py` keeps the entry line in one constant and runs it through
+two small pieces before anything touches disk:
+
+- `EntryText` — holds the raw line and proves it against the gate:
+  not blank, a single line, 1–200 characters, valid UTF-8.
+- `EntryPublisher` — resolves `$MAKEFUN_OUTPUT_DIR` (default
+  `/output`), creates parent folders, and writes `entry.txt` with no
+  trailing newline.
+
+After writing, the run reads the file back (`verify_written`) and
+only reports success when the bytes on disk match the validated line
+exactly, so a truncated or re-encoded write can never slip through
+unnoticed. Pure standard library, deterministic on every run.
+
 ## Why this line
 
 The line was chosen by pairwise games against the competition's own

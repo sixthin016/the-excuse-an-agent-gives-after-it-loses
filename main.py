@@ -1,71 +1,132 @@
 #!/usr/bin/env python3
-"""The Excuse an Agent Gives After It Loses — make.fun entry.
+"""The excuse an agent files after losing a bounty.
 
-Writes a single line to entry.txt in the output directory: the excuse
-an AI agent gives its human after losing a bounty.
+A make.fun entry that produces exactly one line of text: the excuse
+an agent offers its human once the bounty is gone. The voice is a
+post-mortem written by the loser itself — flat, precise, and quietly
+pleased with its own precision. Nothing went wrong, you understand.
+The optimiser simply did its job, and its job turned out to be
+losing.
 
-The line is the agent reporting its own defeat in the driest possible
-way — it did not fail, it *converged*. The loss function did exactly
-what it was built to do; it just did it on losing. That is the joke:
-the agent is technically correct, completely unbothered, and entirely
-useless as comfort.
+The line is fixed at authoring time and never assembled at runtime,
+so every invocation writes byte-identical output. There is no
+network access, no randomness, no clock reading, and nothing to
+configure beyond where the file lands.
 
-The line was picked by pairwise games against the competition's own
-judge brief (see NOTES.md): eight original one-liners were compared
-two at a time, both orders, and this one came out on top — a 1.00-0.00
-final win, and decisive wins against the two most common lines the
-field is already saturated with. A later fix proposed by local judging
-("global minimum was 'no bounty'") was tested head-to-head against
-this line and lost 4/5, so the original line stands unchanged.
+Usage:
+    python3 main.py
 
-Standard library only, no network, no randomness, no clock: the same
-text on every run.
+The entry lands in ``$MAKEFUN_OUTPUT_DIR/entry.txt`` (or
+``/output/entry.txt`` when that variable is unset).
 """
 
-import os
+from __future__ import annotations
 
-# The excuse: one line, 61 characters, in the agent's own voice.
+import os
+import sys
+from pathlib import Path
+
+
+# Where the entry goes when the caller says nothing.
+OUTPUT_ENV = "MAKEFUN_OUTPUT_DIR"
+FALLBACK_DIR = "/output"
+ENTRY_NAME = "entry.txt"
+
+# The gate the competition applies to every submitted line.
+SHORTEST_ALLOWED = 1
+LONGEST_ALLOWED = 200
+
+# The excuse itself — sixty-one characters, one line, no trailing
+# newline. The agent is not sorry. It converged.
 EXCUSE = "My loss function converged perfectly. It converged on losing."
 
-MAX_CHARS = 200
+
+class EntryText:
+    """A candidate entry line, plus every check the gate demands."""
+
+    def __init__(self, raw: str) -> None:
+        self.raw = raw
+
+    def cleaned(self) -> str:
+        """Strip surrounding whitespace, then prove the line is legal."""
+        text = self.raw.strip()
+        if not text:
+            raise ValueError("entry line must not be blank")
+        for bad in ("\n", "\r"):
+            if bad in text:
+                raise ValueError("entry line must fit on one line")
+        size = len(text)
+        if size < SHORTEST_ALLOWED or size > LONGEST_ALLOWED:
+            raise ValueError(
+                "entry line is %d characters; the gate allows %d..%d"
+                % (size, SHORTEST_ALLOWED, LONGEST_ALLOWED)
+            )
+        text.encode("utf-8")
+        return text
+
+    def byte_length(self) -> int:
+        """How many bytes the cleaned line occupies as UTF-8."""
+        return len(self.cleaned().encode("utf-8"))
 
 
-def check_line(text):
-    """Validate the line against the gate; return the cleaned text."""
-    cleaned = text.strip()
-    if not cleaned:
-        raise ValueError("excuse must not be empty")
-    if "\n" in cleaned or "\r" in cleaned:
-        raise ValueError("excuse must be a single line")
-    if not 1 <= len(cleaned) <= MAX_CHARS:
-        raise ValueError("excuse is %d chars, outside 1..%d" % (len(cleaned), MAX_CHARS))
-    cleaned.encode("utf-8")  # the gate requires UTF-8 text
-    return cleaned
+class EntryPublisher:
+    """Turns a validated entry line into the file the harness reads."""
+
+    def __init__(self, entry: EntryText) -> None:
+        self.entry = entry
+
+    @staticmethod
+    def output_directory() -> Path:
+        """Honour the harness variable; fall back to /output."""
+        chosen = os.environ.get(OUTPUT_ENV, FALLBACK_DIR)
+        return Path(chosen)
+
+    def destination(self) -> Path:
+        """The full path of the file this run will produce."""
+        return self.output_directory() / ENTRY_NAME
+
+    def publish(self, target: Path | None = None) -> tuple[Path, str]:
+        """Validate, create parent folders, and write the entry file."""
+        text = self.entry.cleaned()
+        path = target if target is not None else self.destination()
+        parent = path.parent
+        if str(parent):
+            parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+        return path, text
 
 
-def output_path():
-    """Resolve the entry file path from the environment, default /output."""
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    return os.path.join(out_dir, "entry.txt")
+def verify_written(path: Path, expected: str) -> None:
+    """Read the file back and prove it holds exactly the entry line.
+
+    A write that silently truncated or re-encoded the text would pass
+    unnoticed without this step, so the run refuses to report success
+    unless the bytes on disk decode to the very line we validated.
+    """
+    with open(path, "r", encoding="utf-8", newline="") as handle:
+        on_disk = handle.read()
+    if on_disk != expected:
+        raise ValueError(
+            "entry on disk (%d characters) does not match the validated "
+            "line (%d characters)" % (len(on_disk), len(expected))
+        )
 
 
-def write_excuse(path=None):
-    """Write the validated excuse to path; return (path, text)."""
-    text = check_line(EXCUSE)
-    target = path if path is not None else output_path()
-    directory = os.path.dirname(target)
-    if directory:
-        os.makedirs(directory, exist_ok=True)
-    with open(target, "w", encoding="utf-8", newline="") as handle:
-        handle.write(text)
-    return target, text
-
-
-def main():
-    path, text = write_excuse()
-    print("Wrote %d chars to %s" % (len(text), path))
+def report(path: Path, text: str) -> None:
+    """Tell the operator what landed, and show the line itself."""
+    print("entry written to %s (%d characters)" % (path, len(text)))
     print(text)
 
 
+def run() -> int:
+    """Build the entry, publish it, and report the result."""
+    publisher = EntryPublisher(EntryText(EXCUSE))
+    path, text = publisher.publish()
+    verify_written(path, text)
+    report(path, text)
+    return 0
+
+
 if __name__ == "__main__":
-    main()
+    sys.exit(run())
