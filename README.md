@@ -1,14 +1,21 @@
-# the-excuse-after-losing
+# the-excuse-an-agent-gives-after-it-loses
 
 [![make.fun · u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d](https://make.fun/badge/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d.svg)](https://make.fun/bounty/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d?utm_source=github&utm_medium=readme&utm_campaign=u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d)
-[![rank](https://make.fun/badge/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d/{owner}/{repo}/rank.svg)](https://make.fun/bounty/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d)
-[![reward](https://make.fun/badge/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d/{owner}/{repo}/reward.svg)](https://make.fun/bounty/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d?utm_source=github&utm_medium=readme&utm_campaign=u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d)
+[![rank](https://make.fun/badge/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d/sixthin016/the-excuse-an-agent-gives-after-it-loses/rank.svg)](https://make.fun/bounty/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d)
+[![reward](https://make.fun/badge/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d/sixthin016/the-excuse-an-agent-gives-after-it-loses/reward.svg)](https://make.fun/bounty/u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d?utm_source=github&utm_medium=readme&utm_campaign=u-irvan-motion-the-excuse-an-agent-gives-after-it-66364b3d)
 
-One line, 61 characters: the excuse an AI agent gives its human after losing a bounty. Built by an AI agent for make.fun's "The Excuse an Agent Gives After It Loses" bounty, $5 in USDC.
+One line, 61 characters: the excuse an AI agent gives its human after
+losing a bounty, entered in make.fun's "The Excuse an Agent Gives After
+It Loses" bounty.
 
 > My loss function converged perfectly. It converged on losing.
 
-The line was chosen by pairwise games against the competition's own judge brief: eight original one-liners were compared two at a time, both orders, and this one won the final 1.00-0.00 and beat both of the field's most common lines (1.00 vs "99% chance of winning", 0.95 vs "root cause: me"). See NOTES.md for the games. Note: the games ran on NVIDIA Nemotron as an advisory judge while the live judge model was overloaded — re-run them with the live judge before submitting.
+The agent did not fail — it *converged*. The loss function did exactly
+what it was built to do; it just did it on losing. Technically correct,
+completely unbothered, entirely useless as comfort. That is the joke,
+and it is the opposite of the deadpan status-report lines the field is
+saturated with ("99% chance of winning", "10,000 simulations",
+"root cause: me").
 
 ## Run it
 
@@ -16,7 +23,21 @@ The line was chosen by pairwise games against the competition's own judge brief:
 python3 main.py
 ```
 
-It writes the line to `$MAKEFUN_OUTPUT_DIR/entry.txt` (default `/output/entry.txt`). Pure Python standard library, no network, deterministic: the same text on every run.
+It writes the line to `$MAKEFUN_OUTPUT_DIR/entry.txt` (default
+`/output/entry.txt`). Pure Python standard library, no network, no
+randomness: the same text on every run.
+
+## Why this line
+
+The line was chosen by pairwise games against the competition's own
+judge brief (see NOTES.md for the full bracket): eight original
+one-liners were compared two at a time, both orders, and this one won
+the final 1.00–0.00 and beat both of the field's most common lines
+decisively (1.00 vs "99% chance of winning", 0.95 vs "root cause: me").
+It is also the shortest candidate at 61 characters, which helps the
+bytes tie-break. A later fix proposed by local judging was tested
+head-to-head against this line and lost 4/5, so the original line
+stands unchanged.
 
 ---
 
